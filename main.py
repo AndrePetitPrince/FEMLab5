@@ -1,19 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from init_params import *
+from def_params_geo_fiz import *
+from gen_geo_tab import *
+from geo_plot import *
 
 # ##############################################################################################
 # # # # # PRE - PROCESSING # # # # #
-
-def generujTabliceGeometrii(x_0, x_p, n):
-    length = (x_p - x_0) / (n - 1)
-    k = np.array([x_0, x_p])
-
-    for i in range(1, n, 1):
-        k = np.block([k, i * length + x_0])
-    return k
-
 ## 1(a) inicjalizacja parametrow sterujacych programem CZESC 1
 #[ parametry_sterujace ] = inicjalizacja_parametrow_sterujacych ( ... ) ;
+
+#[c, f] = init_params()
+#print("c: ", c)
+#print("f: ", f)
+
+c = 0;
+f = 0;
 
 ## 1(b) definicja parametrow fizycznych i geometrycznych obszaru , warunkow brzegowych CZESC 1
 # - definicja przedzialu ,
@@ -21,14 +23,17 @@ def generujTabliceGeometrii(x_0, x_p, n):
 # - zadanie funkcji wymuszajacej , parametrow rownania rozniczkowego
 # - ...
 #[ parametry_geom_i_fiz ] = definicja_parametrow_geom_i_fiz ( ... ) ;
-x_0=0;
-x_1=1;
 
-wezly = np.array([0, 1, 0.5, 0.75])
+#[x_0,x_R,twb_L,twb_R,wwb_L,wwb_R] = def_params_geo_fiz();
+#print("x_0: ", x_0)
+#print("x_R: ", x_R)
+#print("twb_L: ", twb_L)
+#print("twb_R: ", twb_R)
+#print("wwb_L: ", wwb_L)
+#print("wwb_R: ", wwb_R)
 
-elementy = np.array([[1, 3],
-                     [4, 2],
-                     [3, 4]])
+x_0 = 0;
+x_R = 1;
 
 twb_L = 'D'
 twb_R = 'D'
@@ -36,14 +41,33 @@ twb_R = 'D'
 wwb_L = 0
 wwb_R = 1
 
+
 ## 1(b/c) CZESC 1
 #[ WEZLY , ELEMENTY , WAR_BRZEGOWE ] = definicja_zmiennych_przechowujacych_informacje_o_geometrii (parametry_geom_i_fiz , ... )
-print(generujTabliceGeometrii(1,2,5))
+wezly = np.array([[1, 0],
+                 [2, 1], 
+                 [3, 0.5], 
+                 [4, 0.75]])
+
+elementy = np.array([[1, 1, 3],
+                     [2, 4, 2],
+                     [3, 3, 4]])
+
+#n=input("Podaj liczbe wezlow: ")
+n = 5
+
+wezly, elementy = gen_geo_tab(x_0, x_R, n)
+print(wezly)
+print(elementy)
+
+
+## 1(d) prezentacja geometrii zagadnienia CZESC 2
+#rysuj_geometrie (WEZLY , ELEMENTY , WAR_BRZEGOWE ) ;
+
+geo_plot(wezly, elementy, n)
+
 
 '''
-## 1(d) prezentacja geometrii zagadnienia CZESC 2
-rysuj_geometrie (WEZLY , ELEMENTY , WAR_BRZEGOWE ) ;
-
 # 1(e) utworzenie macierzy wypelnionych zerami CZESC 3
 [A,b] = alokacja_pamieci_na_zmienne_globalne ( liczba_wezlow ) ;
 
