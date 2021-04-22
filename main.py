@@ -1,9 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from init_params import *
+import scipy.integarte as spint
+#from init_params import *
 from def_params_geo_fiz import *
-from gen_geo_tab import *
-from geo_plot import *
+from gen_geo_tab  import *
+from geo_plot  import *
+from alokacja  import *
+from funkcje_bazowe import *
+from Aij import *
 
 # ##############################################################################################
 # # # # # PRE - PROCESSING # # # # #
@@ -14,8 +18,9 @@ from geo_plot import *
 #print("c: ", c)
 #print("f: ", f)
 
-c = 0;
-f = 0;
+c = 0
+#f = lambda x: 0 #wymuszenie
+f = 0
 
 ## 1(b) definicja parametrow fizycznych i geometrycznych obszaru , warunkow brzegowych CZESC 1
 # - definicja przedzialu ,
@@ -45,9 +50,9 @@ wwb_R = 1
 ## 1(b/c) CZESC 1
 #[ WEZLY , ELEMENTY , WAR_BRZEGOWE ] = definicja_zmiennych_przechowujacych_informacje_o_geometrii (parametry_geom_i_fiz , ... )
 wezly = np.array([[1, 0],
-                 [2, 1], 
-                 [3, 0.5], 
-                 [4, 0.75]])
+                  [2, 1], 
+                  [3, 0.5], 
+                  [4, 0.75]])
 
 elementy = np.array([[1, 1, 3],
                      [2, 4, 2],
@@ -67,40 +72,72 @@ print(elementy)
 geo_plot(wezly, elementy, n)
 
 
-'''
-# 1(e) utworzenie macierzy wypelnionych zerami CZESC 3
-[A,b] = alokacja_pamieci_na_zmienne_globalne ( liczba_wezlow ) ;
-
-## 2(a) CZESC 3
-[ lokalne_fun_ksztaltu , pochodne_lokalnych_fun_ksztaltu ] = definicja_funkcji_ksztaltu ( ... ) ;
-# # # # # PROCESSING # # # # #
-for k = 1: liczba_elementow_skonczonych
-
-## 2(b) CZESC 4
-[ nr_glob_elem , nr_glob_wezlow_elem , wspolrzedne_wezlow , jakobian ] =
-zgromadzenie_informacji_dotyczacych_elementu (k, WEZLY , ELEMENTY , ...) ;
-M = obliczenie_lokalnej_macierzy_opisujacej_element ( ) ;
-
-## 2(c) CZESC 5
-A = agregacja_macierzy_lokalnej_w_macierzy_globalnej (M, nr_glob_wezlow_elem , ...) ;
-b = obliczanie_elementow_wektora_prawej_strony ( ) ;
-end # for k = 1: liczba_elementow_skonczonych
+# Processing
+## 1(e) utworzenie macierzy wypelnionych zerami CZESC 3
+#[A,b] = alokacja_pamieci_na_zmienne_globalne ( liczba_wezlow ) ;
+[A,b] = alokacja(n)
 
 
+### 2(a) CZESC 3
+#[ lokalne_fun_ksztaltu , pochodne_lokalnych_fun_ksztaltu ] = definicja_funkcji_ksztaltu ( ... ) ;
+stop_fun_b = 1
+[phi, dphi] = funkcje_bazowe(stop_fun_b)
 
+#xx = np.linspace(-1, 1, 101)
+#plt.plot(xx, phi[0](xx), 'r')
+#plt.plot(xx, phi[1](xx), 'g')
+#plt.plot(xx, dphi[0](xx), 'b')
+#plt.plot(xx, dphi[1](xx), 'c')
+## # # # # PROCESSING # # # # #
+#for k = 1: liczba_elementow_skonczonych
 
+liczba_elementow = np.shape(ELEMENTY)[0]
 
+for ee in np.arange(0, liczba_elementow):
+    
+    elem_ind_wier = ee
+    elem_glob_ind = elementy[ee, 0]
+    elem_wezel_1 = elementy[ee, 1]
+    elem_wezel_2 = elementy[ee, 2]
 
-## 2(d) CZESC 6
-[A, b] = uwzglednienie_warunkow_brzegowych ( WAR_BRZEGOWE , ... ) ;
+    x_a = wezly[elem_wezel_1-1,1]
+    x_b = wezly[elem_wezel_2-1,1]
 
-## 2(e) CZESC 7
-a = rozwiazanie_url (A,b)
-# # # # # POST - PROCESSING # # # # #
+    J = (x_b - x_a)/2
 
-## 3(a) obrobka_wynikow ???? CZESC 8
+    Ml = np.zeros([stop_fun_b+1, stop_fun_b+1])
 
-## 3(b) prezentacja graficzna rozwiazania
-rysuj_rozwiazanie (WEZLY , ELEMENTY , a)
-# ##############################################################################################
-'''
+    m=0; n=0;
+    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+    
+    m=0; n=1;
+    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+
+    m=1; n=0;
+    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+
+    m=1; n=1;
+    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+
+### 2(b) CZESC 4
+#[ nr_glob_elem , nr_glob_wezlow_elem , wspolrzedne_wezlow , jakobian ] =
+#zgromadzenie_informacji_dotyczacych_elementu (k, WEZLY , ELEMENTY , ...) ;
+#M = obliczenie_lokalnej_macierzy_opisujacej_element ( ) ;
+
+### 2(c) CZESC 5
+#A = agregacja_macierzy_lokalnej_w_macierzy_globalnej (M, nr_glob_wezlow_elem , ...) ;
+#b = obliczanie_elementow_wektora_prawej_strony ( ) ;
+#end # for k = 1: liczba_elementow_skonczonych
+
+### 2(d) CZESC 6
+#[A, b] = uwzglednienie_warunkow_brzegowych ( WAR_BRZEGOWE , ... ) ;
+
+### 2(e) CZESC 7
+#a = rozwiazanie_url (A,b)
+## # # # # POST - PROCESSING # # # # #
+
+### 3(a) obrobka_wynikow ???? CZESC 8
+
+### 3(b) prezentacja graficzna rozwiazania
+#rysuj_rozwiazanie (WEZLY , ELEMENTY , a)
+## ##############################################################################################
