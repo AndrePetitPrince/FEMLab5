@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.integarte as spint
+import scipy.integrate as spint
 #from init_params import *
 from def_params_geo_fiz import *
 from gen_geo_tab  import *
@@ -8,6 +8,7 @@ from geo_plot  import *
 from alokacja  import *
 from funkcje_bazowe import *
 from Aij import *
+from rysuj_rozwiazanie import *
 
 # ##############################################################################################
 # # # # # PRE - PROCESSING # # # # #
@@ -63,8 +64,9 @@ n = 5
 
 wezly, elementy = gen_geo_tab(x_0, x_R, n)
 print(wezly)
+print('\n')
 print(elementy)
-
+print('\n')
 
 ## 1(d) prezentacja geometrii zagadnienia CZESC 2
 #rysuj_geometrie (WEZLY , ELEMENTY , WAR_BRZEGOWE ) ;
@@ -88,10 +90,14 @@ stop_fun_b = 1
 #plt.plot(xx, phi[1](xx), 'g')
 #plt.plot(xx, dphi[0](xx), 'b')
 #plt.plot(xx, dphi[1](xx), 'c')
-## # # # # PROCESSING # # # # #
-#for k = 1: liczba_elementow_skonczonych
 
-liczba_elementow = np.shape(ELEMENTY)[0]
+#for k = 1: liczba_elementow_skonczonych
+### 2(b) CZESC 4
+#[ nr_glob_elem , nr_glob_wezlow_elem , wspolrzedne_wezlow , jakobian ] =
+#zgromadzenie_informacji_dotyczacych_elementu (k, WEZLY , ELEMENTY , ...) ;
+#M = obliczenie_lokalnej_macierzy_opisujacej_element ( ) ;
+
+liczba_elementow = np.shape(elementy)[0]
 
 for ee in np.arange(0, liczba_elementow):
     
@@ -99,6 +105,10 @@ for ee in np.arange(0, liczba_elementow):
     elem_glob_ind = elementy[ee, 0]
     elem_wezel_1 = elementy[ee, 1]
     elem_wezel_2 = elementy[ee, 2]
+
+    glob_ind_wezlow = np.array([elem_wezel_1, elem_wezel_2])
+    print(glob_ind_wezlow)
+    print('\n')
 
     x_a = wezly[elem_wezel_1-1,1]
     x_b = wezly[elem_wezel_2-1,1]
@@ -108,22 +118,59 @@ for ee in np.arange(0, liczba_elementow):
     Ml = np.zeros([stop_fun_b+1, stop_fun_b+1])
 
     m=0; n=0;
-    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+    Ml[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)[0]
     
     m=0; n=1;
-    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+    Ml[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)[0]
 
     m=1; n=0;
-    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+    Ml[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)[0]
 
     m=1; n=1;
-    M1[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)
+    Ml[m,n] = J * spint.quad(Aij(dphi[n], dphi[m], c, phi[n], phi[m]), -1, 1)[0]
 
-### 2(b) CZESC 4
-#[ nr_glob_elem , nr_glob_wezlow_elem , wspolrzedne_wezlow , jakobian ] =
-#zgromadzenie_informacji_dotyczacych_elementu (k, WEZLY , ELEMENTY , ...) ;
-#M = obliczenie_lokalnej_macierzy_opisujacej_element ( ) ;
+    A[np._ix(glob_ind_wezlow - 1, glob_ind_wezlow - 1)] = A[np._ix(glob_ind_wezlow - 1, glob_ind_wezlow - 1)] + Ml
 
+    print(Ml)
+    print('\n')
+
+    print(A)
+    print('\n')
+
+    if WB[0]['typ'] == 'D':
+        ind_wezla = WB[0]['ind']
+        wart_war_brzeg = WB[0]['wartosc']
+
+        iwp = ind_wezla - 1 #indeks wezla w tabeli Pythona
+
+        D = 10 ** 14
+
+        temp = A[iwp,iwp]
+        A[iwp,iwp] = temp * D
+        b[iwp]     = temp * D * wart_war_brzeg
+
+    if WB[1]['typ'] == 'D':
+        ind_wezla = WB[1]['ind']
+        wart_war_brzeg = WB[1]['wartosc']
+
+        iwp = ind_wezla - 1 #indeks wezla w tabeli Pythona
+
+        D = 10 ** 14
+
+        temp = A[iwp,iwp]
+        A[iwp,iwp] = temp * D
+        b[iwp]     = temp * D * wart_war_brzeg
+
+    if WB[0]['typ'] == 'N':
+        print('Jeszcze nie zaimplementowano')
+    
+    if WB[1]['typ'] == 'N':
+        print('Jeszcze nie zaimplementowano')
+
+    x = np.linalg.solve(A,b)
+    print(x)
+
+    rysuj_rozwiazanie(wezly, elementy, WB, x)
 ### 2(c) CZESC 5
 #A = agregacja_macierzy_lokalnej_w_macierzy_globalnej (M, nr_glob_wezlow_elem , ...) ;
 #b = obliczanie_elementow_wektora_prawej_strony ( ) ;
