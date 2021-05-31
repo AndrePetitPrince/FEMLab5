@@ -1,18 +1,15 @@
 import numpy as np
-def gen_geo_tab(x_0, x_R, n):
+def gen_geo_tab(x_L,x_R,n_n):   
+    
+    #Macierz wezlow
+    index_n = np.arange(1,n_n+1)
+    x = np.linspace(x_L,x_R,n_n) ;        
+    nodes = (np.block([[index_n], [x]])).T
 
-    elem_length = (x_R - x_0) / (n - 1)
-    nodes = np.zeros((n, 2))
-
-    for nodes_index in range(0, n, 1):
-        nodes[nodes_index, 0] = nodes_index + 1
-        nodes[nodes_index, 1] = nodes_index * elem_length + x_0
-
-    elements = np.zeros((n-1, 3))
-
-    for elements_index in range(0, n-1, 1):
-        elements[elements_index, 0] = elements_index + 1
-        elements[elements_index, 1] = elements_index + 1
-        elements[elements_index, 2] = elements_index + 2
-
+    #Macierz elementow
+    index_e = np.arange(1,n_n)
+    e_begin = np.arange(1,n_n)
+    e_end = np.arange(2,n_n+1)
+    elements = (np.block( [[index_e], [e_begin], [e_end]] ) ).T
+                    
     return nodes, elements
